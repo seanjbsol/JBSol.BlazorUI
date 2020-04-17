@@ -1,0 +1,69 @@
+﻿@if (Hidden)
+{
+    <div class="jb-slide-menu-show" @onclick="ShowSlide" tabindex="0" aria-hidden="true"></div>
+}
+<div class="jb-slide-container @SlideMenuClass">
+    <div class="jb-slide-overlay" @onclick="HideMenu">
+    </div>
+    <div class="jb-slide-menu">
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+        else
+        {
+            <p>No elements defined</p>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; }
+
+    private bool Hidden = true;
+    private bool Hiding = false;
+    private string SlideMenuClass
+    {
+        get
+        {
+            if (Hidden)
+            {
+                return "jb-hidden";
+            }
+            else
+            {
+                if (Hiding)
+                {
+                    return "jb-hide";
+                }
+                else
+                {
+                    return "jb-show";
+                }
+            }
+        }
+    }
+
+    async Task Delay(int milliseconds, Func<Task> action)
+    {
+        await Task.Delay(milliseconds);
+        if (action != null)
+        {
+            await InvokeAsync(action);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    async Task HideMenu()
+    {
+        Hiding = true;
+        Delay(1000, async () => { Hidden = true; Hiding = false; });
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task ShowSlide()
+    {
+        Hidden = false;
+        await InvokeAsync(StateHasChanged);
+    }
+}

@@ -1,0 +1,72 @@
+﻿@implements IDisposable
+<div class="jb-modal-container @(IsShown && !IsHiding ? "jb-modal-show" : "") @(IsHiding ? "jb-modal-hide" : "")">
+    <div class="jb-modal-background" @onclick="CloseModal">
+    </div>
+    @if (IsShown)
+    {
+        <div class="jb-modal">
+
+            @if (!string.IsNullOrEmpty(Title))
+            {
+                <div class="jb-modal-heading">
+                    <div class="d-block float-right">
+                        <button type="button" class="btn btn-sm" @onclick="CloseModal">
+                            <span class="oi oi-x"></span>
+                        </button>
+                    </div>
+                    <h4>@Title</h4>
+                </div>
+            }
+            <div class="jb-modal-content">
+                @ChildContent
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    bool IsShown = false;
+    bool IsHiding = false;
+    bool PreventHide = false;
+    System.Threading.Timer timer;
+
+    public bool IsVisible
+    {
+        get
+        {
+            return IsShown;
+        }
+    }
+
+    public async Task CloseModal()
+    {
+        if (PreventHide)
+        {
+            PreventHide = false;
+            return;
+        }
+        IsHiding = true;
+        await InvokeAsync(StateHasChanged);
+        if (timer != null)
+        {
+            timer.Dispose();
+        }
+        timer = new System.Threading.Timer(async (e) => { await InvokeAsync(() => { IsShown = false; IsHiding = false; timer.Dispose(); InvokeAsync(StateHasChanged); }); }, null, TimeSpan.FromMilliseconds(700), TimeSpan.FromMilliseconds(1400));
+    }
+
+    public void Dispose()
+    {
+        if (timer != null)
+        {
+            timer.Dispose();
+        }
+    }
+
+    public async Task ShowModal()
+    {
+        IsShown = true;
+        await InvokeAsync(StateHasChanged);
+    }
+}
